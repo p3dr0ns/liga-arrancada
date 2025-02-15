@@ -1,283 +1,196 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Arrancada</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
             background-color: #121212;
-            color: #e0e0e0;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
             padding: 20px;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         table {
             width: 100%;
-            margin-bottom: 20px;
+            max-width: 600px;
+            margin: 20px auto;
             border-collapse: collapse;
-            background-color: #333;
+            background: #1e1e1e;
             border-radius: 10px;
             overflow: hidden;
         }
         th, td {
-            padding: 12px;
+            border: 1px solid #ffffff;
+            padding: 10px;
             text-align: center;
-            border: 1px solid #555;
         }
         th {
-            background-color: #444;
-            color: #fff;
-        }
-        td {
-            background-color: #2c2c2c;
-            color: #fff;
+            background-color: #333;
         }
         button {
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
             margin: 5px;
+            padding: 10px;
             border: none;
+            cursor: pointer;
             border-radius: 5px;
-            transition: all 0.3s ease;
         }
-        button:hover {
-            opacity: 0.8;
-        }
-        .vitoria {
-            background-color: #4CAF50;
+        .btn-adicionar { background-color: #1DB954; color: white; }
+        .btn-sortear { background-color: #ff9800; color: white; }
+        .btn-compartilhar { background-color: #007bff; color: white; }
+        .btn-exportar { background-color: #8e44ad; color: white; }
+        .btn-acao { background-color: #444; color: white; }
+        button:hover { opacity: 0.8; }
+        input {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #333;
             color: white;
+            width: calc(100% - 22px);
+            max-width: 400px;
         }
-        .wo {
-            background-color: #FF9800;
-            color: white;
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
-        .add-remove {
-            background-color: #2196F3;
-            color: white;
-        }
-        .backup {
-            background-color: #FFC107;
-            color: white;
-        }
-        .sortear {
-            background-color: #9C27B0;
-            color: white;
-        }
-        .diminuir {
-            background-color: #F44336;
-            color: white;
-        }
-        .actions {
-            margin-top: 30px;
+        .botoes {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            width: 100%;
+            gap: 10px;
+            max-width: 600px;
         }
-        .actions button {
-            width: 180px;
-            margin: 10px;
-        }
-        h1 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-        #tabela-corpo {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .tabela-container {
-            overflow-x: auto;
-            width: 100%;
-        }
-        /* Responsividade para dispositivos móveis */
-        @media (max-width: 768px) {
-            .actions {
-                flex-direction: column;
-                align-items: center;
-            }
-            .actions button {
-                width: 100%;
-                margin: 5px 0;
-            }
-            table {
-                width: 100%;
-                margin-top: 10px;
-            }
-            h1 {
-                font-size: 1.5em;
-                margin-top: 10px;
-            }
+        .backup-container {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
     <h1>Lista de Arrancada</h1>
-
-    <div class="tabela-container">
-        <table id="tabela">
-            <thead>
-                <tr>
-                    <th>Carro</th>
-                    <th>Pontos</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-corpo">
-                <!-- Os pilotos serão carregados aqui -->
-            </tbody>
-        </table>
+    <div class="container">
+        <input type="text" id="nomePiloto" placeholder="Nome do Piloto">
+        <div class="botoes">
+            <button class="btn-adicionar" onclick="adicionarPiloto()">Adicionar Piloto</button>
+            <button class="btn-sortear" onclick="sortearCorrida()">Sortear Corrida</button>
+            <button class="btn-compartilhar" onclick="compartilharLista()">Compartilhar Lista</button>
+        </div>
     </div>
-
-    <div class="actions">
-        <button class="add-remove" onclick="adicionarPiloto()">Adicionar Piloto</button>
-        <button class="add-remove" onclick="removerPiloto()">Remover Piloto</button>
-        <button class="backup" onclick="exportarBackup()">Exportar Backup</button>
-        <input type="file" id="importar-backup" onchange="importarBackup(event)" style="display:none">
-        <button class="backup" onclick="document.getElementById('importar-backup').click()">Importar Backup</button>
-        <button class="sortear" onclick="sortearCorridas()">Sortear Corridas</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Piloto</th>
+                <th>Pontos</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="pilotosLista"></tbody>
+    </table>
+    <div class="backup-container">
+        <button class="btn-exportar" onclick="exportarBackup()">Exportar Backup</button>
+        <input type="file" id="importarArquivo" onchange="importarBackup(event)">
     </div>
-
     <script>
-        let pilotoCount = 0;
-        let pilotos = [];
-
-        // Carregar pilotos do localStorage
-        window.onload = function() {
-            const dadosSalvos = localStorage.getItem('pilotos');
-            if (dadosSalvos) {
-                pilotos = JSON.parse(dadosSalvos);
-            } else {
-                // Dados iniciais
-                pilotos = [
-                    { nome: 'Carro 1', pontos: 0 },
-                    { nome: 'Carro 2', pontos: 0 }
-                ];
-            }
-            atualizarTabela();
-        };
-
-        function atualizarPontos(carro, pontos) {
-            const piloto = pilotos.find(p => p.nome === carro);
-            if (piloto) {
-                piloto.pontos += pontos;
-                document.getElementById(`pontos-${carro}`).textContent = piloto.pontos;
-                salvarDados();
-            }
-        }
-
-        function diminuirPontos(carro) {
-            const piloto = pilotos.find(p => p.nome === carro);
-            if (piloto) {
-                piloto.pontos = Math.max(0, piloto.pontos - 1); // Não deixa o ponto ser negativo
-                document.getElementById(`pontos-${carro}`).textContent = piloto.pontos;
-                salvarDados();
-            }
-        }
+        let pilotos = JSON.parse(localStorage.getItem("pilotos")) || [];
+        atualizarTabela();
 
         function adicionarPiloto() {
-            pilotoCount++;
-            const nomePiloto = prompt("Digite o nome do novo piloto:");
-            if (nomePiloto) {
-                pilotos.push({ nome: nomePiloto, pontos: 0 });
-                atualizarTabela();
+            const nome = document.getElementById("nomePiloto").value.trim();
+            if (nome) {
+                pilotos.push({ nome, pontos: 0 });
                 salvarDados();
-            }
-        }
-
-        function removerPiloto() {
-            const nomePiloto = prompt("Digite o nome do piloto a ser removido:");
-            const index = pilotos.findIndex(p => p.nome === nomePiloto);
-            if (index !== -1) {
-                pilotos.splice(index, 1);
                 atualizarTabela();
-                salvarDados();
-            } else {
-                alert("Piloto não encontrado!");
-            }
-        }
-
-        function atualizarTabela() {
-            const corpoTabela = document.getElementById("tabela-corpo");
-            corpoTabela.innerHTML = '';
-            pilotos.forEach((piloto) => {
-                const linha = document.createElement('tr');
-                linha.innerHTML = `
-                    <td>${piloto.nome}</td>
-                    <td id="pontos-${piloto.nome}">${piloto.pontos}</td>
-                    <td>
-                        <button class="vitoria" onclick="atualizarPontos('${piloto.nome}', 2)">Vitória</button>
-                        <button class="wo" onclick="atualizarPontos('${piloto.nome}', 1)">WO</button>
-                        <button class="diminuir" onclick="diminuirPontos('${piloto.nome}')">Diminuir</button>
-                    </td>
-                `;
-                corpoTabela.appendChild(linha);
-            });
-        }
-
-        function exportarBackup() {
-            const data = JSON.stringify(pilotos);
-            const blob = new Blob([data], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'backup_arrancada.json';
-            link.click();
-        }
-
-        function importarBackup(event) {
-            const file = event.target.files[0];
-            if (file && file.type === 'application/json') {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const dados = JSON.parse(e.target.result);
-                        pilotos = dados;
-                        atualizarTabela();
-                        salvarDados();
-                    } catch (error) {
-                        alert("Erro ao importar o backup.");
-                    }
-                };
-                reader.readAsText(file);
-            } else {
-                alert("Selecione um arquivo JSON válido.");
+                document.getElementById("nomePiloto").value = "";
             }
         }
 
         function salvarDados() {
-            localStorage.setItem('pilotos', JSON.stringify(pilotos));
+            localStorage.setItem("pilotos", JSON.stringify(pilotos));
         }
 
-        function sortearCorridas() {
-            const pilotosCopy = [...pilotos];
-            if (pilotosCopy.length < 2) {
-                alert("Não há pilotos suficientes para sortear corridas!");
+        function atualizarTabela() {
+            const tbody = document.getElementById("pilotosLista");
+            tbody.innerHTML = "";
+            pilotos.forEach((piloto, index) => {
+                const row = `<tr>
+                    <td>${piloto.nome}</td>
+                    <td>${piloto.pontos}</td>
+                    <td>
+                        <button class="btn-acao" onclick="alterarPontos(${index}, 2)">Vitória (+2)</button>
+                        <button class="btn-acao" onclick="alterarPontos(${index}, 1)">WO (+1)</button>
+                        <button class="btn-acao" onclick="alterarPontos(${index}, -1)">Diminuir (-1)</button>
+                        <button class="btn-acao" onclick="removerPiloto(${index})">Remover</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function alterarPontos(index, valor) {
+            pilotos[index].pontos += valor;
+            if (pilotos[index].pontos < 0) pilotos[index].pontos = 0;
+            salvarDados();
+            atualizarTabela();
+        }
+
+        function removerPiloto(index) {
+            pilotos.splice(index, 1);
+            salvarDados();
+            atualizarTabela();
+        }
+
+        function compartilharLista() {
+            let texto = "Lista de Pilotos:\n";
+            pilotos.forEach(p => texto += `${p.nome} - ${p.pontos} pontos\n`);
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            window.open(url, "_blank");
+        }
+
+        function sortearCorrida() {
+            if (pilotos.length < 2) {
+                alert("Adicione pelo menos 2 pilotos para sortear.");
                 return;
             }
-
-            const sorteados = [];
-            while (pilotosCopy.length > 1) {
-                const piloto1 = pilotosCopy.splice(Math.floor(Math.random() * pilotosCopy.length), 1)[0];
-                const piloto2 = pilotosCopy.splice(Math.floor(Math.random() * pilotosCopy.length), 1)[0];
-                sorteados.push([piloto1, piloto2]);
+            let sorteio = [...pilotos];
+            sorteio.sort(() => Math.random() - 0.5);
+            let texto = "Corridas Sorteadas:\n";
+            for (let i = 0; i < sorteio.length - 1; i += 2) {
+                texto += `${sorteio[i].nome} vs ${sorteio[i + 1].nome}\n`;
             }
+            if (sorteio.length % 2 === 1) {
+                texto += `Piloto sobrando: ${sorteio[sorteio.length - 1].nome}\n`;
+            }
+            alert(texto);
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            window.open(url, "_blank");
+        }
 
-            const sorteioWindow = window.open('', '', 'width=400,height=300');
-            sorteioWindow.document.write('<h2>Corridas Sorteadas</h2>');
-            sorteioWindow.document.write('<ul>');
-            sorteados.forEach(pair => {
-                sorteioWindow.document.write(`<li>${pair[0].nome} vs ${pair[1].nome}</li>`);
-            });
-            sorteioWindow.document.write('</ul>');
+        function exportarBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pilotos));
+            const downloadAnchor = document.createElement("a");
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "backup_pilotos.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importarBackup(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pilotos = JSON.parse(e.target.result);
+                    salvarDados();
+                    atualizarTabela();
+                };
+                reader.readAsText(file);
+            }
         }
     </script>
-
 </body>
 </html>
